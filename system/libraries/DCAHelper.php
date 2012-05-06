@@ -264,4 +264,38 @@ class DCAHelper extends Controller
 			return $arrErg;
 		}
 	}
+
+
+	/**
+	 * Get array of modules by module type
+	 *
+	 * using:
+	 * 	'inputType'               => 'select',
+	 * 	'options_callback'        => array('tl_module_custom', 'getArchiveModules'),
+	 *
+	 *
+	 * class tl_module_custom extends DCAHelper
+	 * {
+	 *    public function getArchiveModules()
+	 *    {
+	 *       return $this->getModules('newsreader');
+	 *    }
+	 * }
+	 *
+	 * @param string $strModuleType Module type
+	 * @return array
+	 */
+	public function getModules($strModuleType)
+	{
+		$arrModules = array();
+		$objModules = $this->Database->prepare('SELECT m.id, m.name, t.name AS theme FROM tl_module m LEFT JOIN tl_theme t ON m.pid=t.id WHERE m.type=? ORDER BY t.name, m.name')
+				->execute($strModuleType);
+
+		while ($objModules->next())
+		{
+			$arrModules[$objModules->theme][$objModules->id] = $objModules->name . ' (ID ' . $objModules->id . ')';
+		}
+
+		return $arrModules;
+	}
 }
