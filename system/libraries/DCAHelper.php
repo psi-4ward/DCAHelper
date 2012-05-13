@@ -19,6 +19,54 @@ class DCAHelper extends Controller
 
 
 	/**
+	 * Check permissions to edit table
+	 * @param DataContainer
+	 */
+	public function checkPermission(DataContainer $dc)
+	{
+		if ($this->User->isAdmin)
+		{
+			return;
+		}
+
+		// Check current action
+		switch ($this->Input->get('act'))
+		{
+			case 'paste':
+
+			case 'create':
+			case 'select':
+
+			case 'cut':
+			case 'copy':
+
+			case 'edit':
+			case 'delete':
+
+			case 'view':
+			case 'show':
+			case 'toggle':
+
+			case 'select':
+			case 'editAll':
+			case 'deleteAll':
+			case 'overrideAll':
+			case 'cutAll':
+			case 'copyAll':
+				// Allow
+				break;
+
+			default:
+				if (strlen($this->Input->get('act')))
+				{
+					$this->log('Not enough permissions to create record ID "'.$this->Input->get('pid').'"', $dc->table . ' checkPermission', TL_ERROR);
+					$this->redirect('contao/main.php?act=error');
+				}
+		}
+	}
+
+
+	/**
 	 * Publish/unpublish
 	 *
 	 * @param int $intId
@@ -307,5 +355,54 @@ class DCAHelper extends Controller
 		}
 
 		return $arrModules;
+	}
+
+
+	/**
+	 * Get all forms and return them as array
+	 * @param DataContainer
+	 * @return array
+	 */
+	public function getForms(DataContainer $dc)
+	{
+		if (!$this->User->isAdmin && !is_array($this->User->forms))
+		{
+			return array();
+		}
+
+		$arrForms = array();
+		$objForms = $this->Database->execute("SELECT id, title FROM tl_form ORDER BY title");
+
+		while ($objForms->next())
+		{
+			if ($this->User->isAdmin || $this->User->hasAccess($objForms->id, 'forms'))
+			{
+				$arrForms[$objForms->id] = $objForms->title . ' (ID ' . $objForms->id . ')';
+			}
+		}
+
+		return $arrForms;
+	}
+
+
+	/**
+	 * Return the edit module wizard
+	 * @param DataContainer
+	 * @return string
+	 */
+	public function editModule(DataContainer $dc)
+	{
+		return ($dc->value < 1) ? '' : ' <a href="contao/main.php?do=themes&amp;table=tl_module&amp;act=edit&amp;id=' . $dc->value . '" title="'.sprintf(specialchars($GLOBALS['TL_LANG']['tl_content']['editalias'][1]), $dc->value).'" style="padding-left:3px">' . $this->generateImage('alias.gif', $GLOBALS['TL_LANG']['tl_content']['editalias'][0], 'style="vertical-align:top"') . '</a>';
+	}
+
+
+	/**
+	 * Return the edit form wizard
+	 * @param DataContainer
+	 * @return string
+	 */
+	public function editForm(DataContainer $dc)
+	{
+		return ($dc->value < 1) ? '' : ' <a href="contao/main.php?do=form&amp;table=tl_form_field&amp;id=' . $dc->value . '" title="'.sprintf(specialchars($GLOBALS['TL_LANG']['tl_content']['editalias'][1]), $dc->value).'" style="padding-left:3px">' . $this->generateImage('alias.gif', $GLOBALS['TL_LANG']['tl_content']['editalias'][0], 'style="vertical-align:top"') . '</a>';
 	}
 }
