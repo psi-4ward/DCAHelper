@@ -271,24 +271,34 @@ class DCAHelper extends Controller
 	 *
 	 * using:
 	 * 	'inputType'               => 'select',
-	 * 	'options_callback'        => array('tl_module_custom', 'getArchiveModules'),
+	 *  'options_callback'        => array('tl_module_custom', 'getModules'),
 	 *
+	 * or if you want to get only modules of special type then use next code:
+	 *
+	 * 	'options_callback'        => array('tl_module_custom', 'getArchiveModules'),
 	 *
 	 * class tl_module_custom extends DCAHelper
 	 * {
-	 *    public function getArchiveModules()
+	 *    public function getArchiveModules(DataContainer $dc)
 	 *    {
-	 *       return $this->getModules('newsreader');
+	 *       return $this->getModules($dc, 'newsreader');
 	 *    }
 	 * }
 	 *
+	 * @param DataContainer
 	 * @param string $strModuleType Module type
 	 * @return array
 	 */
-	public function getModules($strModuleType)
+	public function getModules(DataContainer $dc, $strModuleType = '')
 	{
 		$arrModules = array();
-		$objModules = $this->Database->prepare('SELECT m.id, m.name, t.name AS theme FROM tl_module m LEFT JOIN tl_theme t ON m.pid=t.id WHERE m.type=? ORDER BY t.name, m.name')
+
+		$objModules = $this->Database->prepare('
+			SELECT m.id, m.name, t.name AS theme
+			FROM tl_module m
+			LEFT JOIN tl_theme t ON m.pid=t.id
+			' . ($strModuleType ? 'WHERE m.type=?' : '') . '
+			ORDER BY t.name, m.name')
 				->execute($strModuleType);
 
 		while ($objModules->next())
