@@ -264,4 +264,97 @@ class DCAHelper extends Controller
 			return $arrErg;
 		}
 	}
+
+
+	/**
+	 * Get array of modules by module type
+	 *
+	 * using:
+	 * 	'inputType'               => 'select',
+	 *  'options_callback'        => array('tl_module_custom', 'getModules'),
+	 *
+	 * or if you want to get only modules of special type then use next code:
+	 *
+	 * 	'options_callback'        => array('tl_module_custom', 'getArchiveModules'),
+	 *
+	 * class tl_module_custom extends DCAHelper
+	 * {
+	 *    public function getArchiveModules(DataContainer $dc)
+	 *    {
+	 *       return $this->getModules($dc, 'newsreader');
+	 *    }
+	 * }
+	 *
+	 * @param DataContainer
+	 * @param string $strModuleType Module type
+	 * @return array
+	 */
+	public function getModules(DataContainer $dc, $strModuleType = '')
+	{
+		$arrModules = array();
+
+		$objModules = $this->Database->prepare('
+			SELECT m.id, m.name, t.name AS theme
+			FROM tl_module m
+			LEFT JOIN tl_theme t ON m.pid=t.id
+			' . ($strModuleType ? 'WHERE m.type=?' : '') . '
+			ORDER BY t.name, m.name')
+				->execute($strModuleType);
+
+		while ($objModules->next())
+		{
+			$arrModules[$objModules->theme][$objModules->id] = $objModules->name . ' (ID ' . $objModules->id . ')';
+		}
+
+		return $arrModules;
+	}
+
+
+	/**
+	 * Get all forms and return them as array
+	 * @param DataContainer
+	 * @return array
+	 */
+	public function getForms(DataContainer $dc)
+	{
+		if (!$this->User->isAdmin && !is_array($this->User->forms))
+		{
+			return array();
+		}
+
+		$arrForms = array();
+		$objForms = $this->Database->execute("SELECT id, title FROM tl_form ORDER BY title");
+
+		while ($objForms->next())
+		{
+			if ($this->User->isAdmin || $this->User->hasAccess($objForms->id, 'forms'))
+			{
+				$arrForms[$objForms->id] = $objForms->title . ' (ID ' . $objForms->id . ')';
+			}
+		}
+
+		return $arrForms;
+	}
+
+
+	/**
+	 * Return the edit module wizard
+	 * @param DataContainer
+	 * @return string
+	 */
+	public function editModule(DataContainer $dc)
+	{
+		return ($dc->value < 1) ? '' : ' <a href="contao/main.php?do=themes&amp;table=tl_module&amp;act=edit&amp;id=' . $dc->value . '" title="'.sprintf(specialchars($GLOBALS['TL_LANG']['tl_content']['editalias'][1]), $dc->value).'" style="padding-left:3px">' . $this->generateImage('alias.gif', $GLOBALS['TL_LANG']['tl_content']['editalias'][0], 'style="vertical-align:top"') . '</a>';
+	}
+
+
+	/**
+	 * Return the edit form wizard
+	 * @param DataContainer
+	 * @return string
+	 */
+	public function editForm(DataContainer $dc)
+	{
+		return ($dc->value < 1) ? '' : ' <a href="contao/main.php?do=form&amp;table=tl_form_field&amp;id=' . $dc->value . '" title="'.sprintf(specialchars($GLOBALS['TL_LANG']['tl_content']['editalias'][1]), $dc->value).'" style="padding-left:3px">' . $this->generateImage('alias.gif', $GLOBALS['TL_LANG']['tl_content']['editalias'][0], 'style="vertical-align:top"') . '</a>';
+	}
 }
