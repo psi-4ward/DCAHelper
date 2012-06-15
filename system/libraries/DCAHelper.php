@@ -19,54 +19,6 @@ class DCAHelper extends Controller
 
 
 	/**
-	 * Check permissions to edit table
-	 * @param DataContainer
-	 */
-	public function checkPermission(DataContainer $dc)
-	{
-		if ($this->User->isAdmin)
-		{
-			return;
-		}
-
-		// Check current action
-		switch ($this->Input->get('act'))
-		{
-			case 'paste':
-
-			case 'create':
-			case 'select':
-
-			case 'cut':
-			case 'copy':
-
-			case 'edit':
-			case 'delete':
-
-			case 'view':
-			case 'show':
-			case 'toggle':
-
-			case 'select':
-			case 'editAll':
-			case 'deleteAll':
-			case 'overrideAll':
-			case 'cutAll':
-			case 'copyAll':
-				// Allow
-				break;
-
-			default:
-				if (strlen($this->Input->get('act')))
-				{
-					$this->log('Not enough permissions to create record ID "'.$this->Input->get('pid').'"', $dc->table . ' checkPermission', TL_ERROR);
-					$this->redirect('contao/main.php?act=error');
-				}
-		}
-	}
-
-
-	/**
 	 * Publish/unpublish
 	 *
 	 * @param int $intId
